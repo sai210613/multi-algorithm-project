@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Budget Planner | 0/1 Knapsack Optimizer</title>
+  <meta name="description"
+    content="Optimize your budget using the 0/1 Knapsack Dynamic Programming algorithm. Add items with costs and values, set your budget, and find the best combination." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- Animated background particles -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="app-wrapper">
+
+    <!-- ======== HEADER ======== -->
+    <header class="header">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+          <path d="M2 17l10 5 10-5" />
+          <path d="M2 12l10 5 10-5" />
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1>Smart Budget Planner</h1>
+        <p>Powered by 0/1 Knapsack Dynamic Programming</p>
+      </div>
+      <div class="algo-badge">DP Algorithm</div>
+    </header>
+
+    <!-- ======== MAIN GRID ======== -->
+    <main class="main-grid">
+
+      <!-- LEFT COLUMN: Input -->
+      <section class="card input-card" aria-label="Budget and Item Input">
+
+        <!-- Budget Input -->
+        <div class="card-section">
+          <h2 class="section-title">
+            <span class="section-icon">💰</span>
+            Set Your Budget
+          </h2>
+          <div class="input-group">
+            <label for="budget-input">Total Budget (₹)</label>
+            <div class="input-wrapper">
+              <span class="input-prefix">₹</span>
+              <input type="number" id="budget-input" min="1" placeholder="e.g. 500"
+                aria-label="Enter your total budget" />
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Add Item Form -->
+        <div class="card-section">
+          <h2 class="section-title">
+            <span class="section-icon">➕</span>
+            Add an Item
+          </h2>
+          <div class="form-grid">
+            <div class="input-group">
+              <label for="item-name">Item Name</label>
+              <input type="text" id="item-name" placeholder="e.g. Phone" maxlength="30" aria-label="Item name" />
+            </div>
+            <div class="input-group">
+              <label for="item-cost">Cost (₹)</label>
+              <input type="number" id="item-cost" min="1" placeholder="e.g. 200" aria-label="Item cost" />
+            </div>
+            <div class="input-group">
+              <label for="item-value">Value / Importance</label>
+              <input type="number" id="item-value" min="1" placeholder="e.g. 80"
+                aria-label="Item value or importance score" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button id="add-item-btn" class="btn btn-secondary" aria-label="Add item to list">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add Item
+            </button>
+          </div>
+          <div id="form-error" class="error-message" role="alert" aria-live="polite"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Items Table -->
+        <div class="card-section">
+          <div class="section-header-row">
+            <h2 class="section-title">
+              <span class="section-icon">📋</span>
+              Items List
+            </h2>
+            <span id="item-count" class="item-count-badge">0 items</span>
+          </div>
+
+          <div id="items-container" class="items-container">
+            <div id="empty-state" class="empty-state">
+              <div class="empty-icon">🛒</div>
+              <p>No items added yet.<br />Start by adding items above.</p>
+            </div>
+            <div id="items-table-wrap" class="items-table-wrap hidden">
+              <table class="items-table" id="items-table" aria-label="Items list">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Item</th>
+                    <th>Cost (₹)</th>
+                    <th>Value</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="items-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Optimize Button -->
+        <div class="optimize-btn-wrap">
+          <button id="optimize-btn" class="btn btn-primary" aria-label="Run knapsack optimization">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            Optimize Budget
+          </button>
+          <button id="reset-btn" class="btn btn-ghost" aria-label="Reset all data">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 .49-3.5" />
+            </svg>
+            Reset
+          </button>
+        </div>
+
+      </section>
+
+      <!-- RIGHT COLUMN: Results -->
+      <section class="results-column" aria-label="Optimization Results">
+
+        <!-- Loading Spinner -->
+        <div id="loading-overlay" class="loading-overlay hidden" role="status" aria-live="polite">
+          <div class="spinner-ring"></div>
+          <p>Running DP Algorithm…</p>
+        </div>
+
+        <!-- Results Card -->
+        <div id="results-card" class="card results-card hidden">
+          <div class="card-section">
+            <div class="section-header-row" style="margin-bottom:18px;">
+              <h2 class="section-title" style="margin-bottom:0;">
+                <span class="section-icon">🏆</span>
+                Optimization Results
+              </h2>
+              <button id="reset-btn-results" class="btn btn-ghost btn-reset-inline" aria-label="Reset all data">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+                Reset
+              </button>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="stats-grid">
+              <div class="stat-box stat-value">
+                <span class="stat-label">Max Value</span>
+                <span class="stat-number" id="result-value">0</span>
+              </div>
+              <div class="stat-box stat-cost">
+                <span class="stat-label">Total Cost</span>
+                <span class="stat-number" id="result-cost">₹0</span>
+              </div>
+              <div class="stat-box stat-budget">
+                <span class="stat-label">Budget Left</span>
+                <span class="stat-number" id="result-budget-left">₹0</span>
+              </div>
+            </div>
+
+            <!-- Selected Items -->
+            <div class="selected-section">
+              <h3 class="sub-title">Selected Items</h3>
+              <div id="selected-items-list" class="selected-items-list"></div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="comparison-section">
+              <h3 class="sub-title">Item Comparison</h3>
+              <div class="comparison-table-wrap">
+                <table class="comparison-table" aria-label="Item selection comparison">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Cost</th>
+                      <th>Value</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="comparison-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DP Table Card -->
+        <div id="dp-table-card" class="card dp-card hidden">
+          <div class="card-section">
+            <div class="section-header-row">
+              <h2 class="section-title">
+                <span class="section-icon">📊</span>
+                DP Table Visualization
+              </h2>
+              <button id="toggle-dp-btn" class="btn btn-xs" aria-expanded="true" aria-controls="dp-table-outer">
+                Hide
+              </button>
+            </div>
+            <p class="dp-hint">Each cell dp[i][w] = max value using first i items with budget w</p>
+            <div id="dp-table-outer" class="dp-table-outer">
+              <div id="dp-table-wrap" class="dp-table-wrap">
+                <table id="dp-table" class="dp-table" aria-label="Dynamic programming table"></table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Explanation Card -->
+        <div id="steps-card" class="card steps-card hidden">
+          <div class="card-section">
+            <div class="section-header-row">
+              <h2 class="section-title">
+                <span class="section-icon">🧠</span>
+                Step-by-Step Explanation
+              </h2>
+              <button id="toggle-steps-btn" class="btn btn-xs" aria-expanded="true" aria-controls="steps-list">
+                Hide
+              </button>
+            </div>
+            <ol id="steps-list" class="steps-list"></ol>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>0/1 Knapsack — Dynamic Programming | Smart Budget Planner</p>
+    </footer>
+
+  </div>
+
+  <!-- Floating Reset Button (always visible) -->
+  <button id="fab-reset-btn" class="fab-reset" aria-label="Reset everything and start over" title="Reset">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+    <span>Reset</span>
+  </button>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
